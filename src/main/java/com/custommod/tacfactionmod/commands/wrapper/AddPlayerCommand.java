@@ -12,7 +12,7 @@ import static com.mojang.text2speech.Narrator.LOGGER;
 
 public class AddPlayerCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("tacfaction")
+        dispatcher.register(Commands.literal("tac")
                 .then(Commands.literal("addplayer")
                         .then(Commands.argument("claimName", StringArgumentType.string())
                                 .then(Commands.argument("playerName", StringArgumentType.string())

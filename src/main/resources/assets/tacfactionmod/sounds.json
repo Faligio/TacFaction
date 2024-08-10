@@ -1,0 +1,16 @@
+{
+  "ed_new_location": {
+    "sounds": [
+      {
+        "name": "tacfactionmod:ed_new_location"
+      }
+    ]
+  },
+  "ds_new_location": {
+    "sounds": [
+      {
+        "name": "tacfactionmod:ds_new_location"
+      }
+    ]
+  }
+}

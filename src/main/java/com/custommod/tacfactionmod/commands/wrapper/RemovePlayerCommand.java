@@ -10,7 +10,7 @@ import com.custommod.tacfactionmod.TacFactionClaim;
 
 public class RemovePlayerCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("tacfaction")
+        dispatcher.register(Commands.literal("tac")
                 .then(Commands.literal("removeplayer")
                         .then(Commands.argument("claimName", StringArgumentType.string())
                                 .then(Commands.argument("playerName", StringArgumentType.string())

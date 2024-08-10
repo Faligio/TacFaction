@@ -10,7 +10,7 @@ import com.custommod.tacfactionmod.TacFactionClaim;
 
 public class ListClaimPlayersCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("tacfaction")
+        dispatcher.register(Commands.literal("tac")
                 .then(Commands.literal("listclaimplayers")
                         .then(Commands.argument("claimName", StringArgumentType.string())
                                 .executes(context -> {

@@ -5,22 +5,26 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import com.custommod.tacfactionmod.TacFactionClaim;
 
-public class ClaimCommand {
+import java.util.function.Supplier;
+
+public class RemoveClaimCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("tac")
-                .then(Commands.literal("claim")
+                .then(Commands.literal("removeclaim")
                         .then(Commands.argument("claimName", StringArgumentType.string())
                                 .executes(context -> {
-                                    String claimName = StringArgumentType.getString(context, "claimName");
                                     CommandSourceStack source = context.getSource();
-                                    ServerPlayer player = source.getPlayerOrException();
+                                    String claimName = StringArgumentType.getString(context, "claimName");
 
-                                    TacFactionClaim.LOGGER.info("Initializing claim with name: " + claimName);
-                                    TacFactionClaim.activeClaims.put(claimName, new TacFactionClaim.ClaimData(player.getUUID()));
-                                    source.sendSuccess(() -> Component.literal("Claim '" + claimName + "' initialized! Now set the first corner using /tacfaction claimpos1"), false);
+                                    if (TacFactionClaim.activeClaims.containsKey(claimName)) {
+                                        TacFactionClaim.activeClaims.remove(claimName);
+                                        source.sendSuccess((Supplier<Component>) () -> Component.literal("Claim '" + claimName + "' has been removed."), false);
+                                    } else {
+                                        source.sendFailure(Component.literal("No claim found with the name '" + claimName + "'."));
+                                    }
+
                                     return 1;
                                 })
                         )

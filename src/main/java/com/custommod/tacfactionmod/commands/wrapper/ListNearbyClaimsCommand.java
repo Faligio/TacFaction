@@ -11,7 +11,7 @@ import java.util.Map;  // Import du type Map
 
 public class ListNearbyClaimsCommand {
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
-        dispatcher.register(Commands.literal("tacfaction")
+        dispatcher.register(Commands.literal("tac")
                 .then(Commands.literal("listnearbyclaims")
                         .executes(context -> {
                             CommandSourceStack source = context.getSource();
