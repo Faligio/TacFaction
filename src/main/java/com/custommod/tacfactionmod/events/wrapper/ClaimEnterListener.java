@@ -42,15 +42,12 @@ public class ClaimEnterListener {
                                 ? claim.title
                                 : "Claimed Area";  // Default title if none is set
 
-                        // Create the title component without underline
                         MutableComponent titleComponent = Component.literal(title)
                                 .setStyle(Style.EMPTY);
 
-                        // Display the title slightly higher on the screen
                         player.connection.send(new ClientboundSetTitleTextPacket(titleComponent));
                         player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 10));
 
-                        // Play sound when entering the claim
                         player.getCommandSenderWorld().playSound(null, player.blockPosition(), TacFactionClaim.ED_NEW_LOCATION.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
                         playerClaimStates.put(playerId, claimName);
@@ -60,7 +57,6 @@ public class ClaimEnterListener {
             }
 
             if (!isInsideClaim && playerClaimStates.containsKey(playerId)) {
-                // The player has left the claim
                 playerClaimStates.remove(playerId);
             }
         }

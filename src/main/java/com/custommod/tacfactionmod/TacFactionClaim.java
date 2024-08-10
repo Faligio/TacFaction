@@ -2,6 +2,7 @@ package com.custommod.tacfactionmod;
 
 import com.custommod.tacfactionmod.commands.wrapper.*;
 import com.custommod.tacfactionmod.events.wrapper.ClaimEnterListener;
+import com.custommod.tacfactionmod.events.wrapper.BlockEventListener;
 import com.mojang.logging.LogUtils;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
@@ -51,6 +52,7 @@ public class TacFactionClaim {
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("TacFaction Mod Setup Complete");
         MinecraftForge.EVENT_BUS.register(new ClaimEnterListener());
+        MinecraftForge.EVENT_BUS.register(new BlockEventListener()); // Enregistrement de l'écouteur de bloc
     }
 
     @SubscribeEvent
@@ -77,9 +79,8 @@ public class TacFactionClaim {
         public Set<java.util.UUID> allowedPlayers = new HashSet<>();
         public java.util.UUID owner;
 
-        // Nouvelles variables pour le title et le subtitle
+        // Nouvelles variables pour le title
         public String title = "You entered";
-        public String subtitle = "Claimed Area";
 
         public ClaimData(java.util.UUID owner) {
             this.owner = owner;
@@ -99,7 +100,7 @@ public class TacFactionClaim {
             double minX = Math.min(claim.pos1.x, claim.pos2.x);
             double minZ = Math.min(claim.pos1.z, claim.pos2.z);
             double maxX = Math.max(claim.pos1.x, claim.pos2.x);
-            double maxZ = Math.max(claim.pos1.z, claim.pos2.z);
+            double maxZ = Math.max(claim.pos2.z, claim.pos2.z);
 
             double distX = Math.max(Math.abs(pos.x - minX), Math.abs(pos.x - maxX));
             double distZ = Math.max(Math.abs(pos.z - minZ), Math.abs(pos.z - maxZ));
