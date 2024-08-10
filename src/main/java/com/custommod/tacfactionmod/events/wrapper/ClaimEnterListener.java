@@ -1,9 +1,10 @@
 package com.custommod.tacfactionmod.events.wrapper;
 
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
-import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
 import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.phys.Vec3;
@@ -37,11 +38,21 @@ public class ClaimEnterListener {
                     String claimName = entry.getKey();
 
                     if (!claimName.equals(playerClaimStates.get(playerId))) {
-                        player.connection.send(new ClientboundSetTitleTextPacket(Component.literal("You entered: " + claimName)));
-                        player.connection.send(new ClientboundSetSubtitleTextPacket(Component.literal("Claimed Area")));
-                        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 70, 20));
+                        String title = claim.title != null && !claim.title.isEmpty()
+                                ? claim.title
+                                : "Claimed Area";  // Default title if none is set
 
+                        // Create the title component without underline
+                        MutableComponent titleComponent = Component.literal(title)
+                                .setStyle(Style.EMPTY);
+
+                        // Display the title slightly higher on the screen
+                        player.connection.send(new ClientboundSetTitleTextPacket(titleComponent));
+                        player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 10));
+
+                        // Play sound when entering the claim
                         player.getCommandSenderWorld().playSound(null, player.blockPosition(), TacFactionClaim.ED_NEW_LOCATION.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+
                         playerClaimStates.put(playerId, claimName);
                     }
                     break;
@@ -49,7 +60,7 @@ public class ClaimEnterListener {
             }
 
             if (!isInsideClaim && playerClaimStates.containsKey(playerId)) {
-                // Le joueur a quitté le claim
+                // The player has left the claim
                 playerClaimStates.remove(playerId);
             }
         }

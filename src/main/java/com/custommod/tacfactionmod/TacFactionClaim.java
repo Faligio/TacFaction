@@ -66,7 +66,9 @@ public class TacFactionClaim {
         RemovePlayerCommand.register(dispatcher);
         ListClaimPlayersCommand.register(dispatcher);
         ListNearbyClaimsCommand.register(dispatcher);
-        RemoveClaimCommand.register(dispatcher); // Enregistrement de la commande RemoveClaimCommand
+        RemoveClaimCommand.register(dispatcher);
+        ModifyClaimTitleCommand.register(dispatcher); // Enregistrement de la commande ModifyClaimTitleCommand
+        ListClaimsCommand.register(dispatcher); // Enregistrement de la commande ListClaimsCommand
     }
 
     public static class ClaimData {
@@ -74,6 +76,10 @@ public class TacFactionClaim {
         public Vec3 pos2;
         public Set<java.util.UUID> allowedPlayers = new HashSet<>();
         public java.util.UUID owner;
+
+        // Nouvelles variables pour le title et le subtitle
+        public String title = "You entered";
+        public String subtitle = "Claimed Area";
 
         public ClaimData(java.util.UUID owner) {
             this.owner = owner;
