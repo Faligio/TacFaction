@@ -40,7 +40,7 @@ public class ClaimEnterListener {
                     if (!claimName.equals(playerClaimStates.get(playerId))) {
                         String title = claim.title != null && !claim.title.isEmpty()
                                 ? claim.title
-                                : "Claimed Area";  // Default title if none is set
+                                : "Claimed Area";
 
                         MutableComponent titleComponent = Component.literal(title)
                                 .setStyle(Style.EMPTY);
@@ -48,7 +48,8 @@ public class ClaimEnterListener {
                         player.connection.send(new ClientboundSetTitleTextPacket(titleComponent));
                         player.connection.send(new ClientboundSetTitlesAnimationPacket(10, 60, 10));
 
-                        player.getCommandSenderWorld().playSound(null, player.blockPosition(), TacFactionClaim.ED_NEW_LOCATION.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
+                        // Play sound only for the player
+                        player.playNotifySound(TacFactionClaim.ED_NEW_LOCATION.get(), SoundSource.PLAYERS, 1.0F, 1.0F);
 
                         playerClaimStates.put(playerId, claimName);
                     }

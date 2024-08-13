@@ -6,6 +6,7 @@ import com.custommod.tacfactionmod.events.wrapper.BlockEventListener;
 import com.mojang.logging.LogUtils;
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -52,7 +53,7 @@ public class TacFactionClaim {
     private void commonSetup(final FMLCommonSetupEvent event) {
         LOGGER.info("TacFaction Mod Setup Complete");
         MinecraftForge.EVENT_BUS.register(new ClaimEnterListener());
-        MinecraftForge.EVENT_BUS.register(new BlockEventListener()); // Enregistrement de l'écouteur de bloc
+        MinecraftForge.EVENT_BUS.register(new BlockEventListener());
     }
 
     @SubscribeEvent
@@ -60,17 +61,30 @@ public class TacFactionClaim {
         LOGGER.info("onServerStarting called!");
         CommandDispatcher<CommandSourceStack> dispatcher = event.getDispatcher();
 
-        CheckClaimCommand.register(dispatcher);
-        ClaimCommand.register(dispatcher);
-        ClaimPos1Command.register(dispatcher);
-        ClaimPos2Command.register(dispatcher);
-        AddPlayerCommand.register(dispatcher);
-        RemovePlayerCommand.register(dispatcher);
-        ListClaimPlayersCommand.register(dispatcher);
-        ListNearbyClaimsCommand.register(dispatcher);
-        RemoveClaimCommand.register(dispatcher);
-        ModifyClaimTitleCommand.register(dispatcher); // Enregistrement de la commande ModifyClaimTitleCommand
-        ListClaimsCommand.register(dispatcher); // Enregistrement de la commande ListClaimsCommand
+        registerCommandWithPermission(dispatcher, "CheckClaimCommand", CheckClaimCommand::register, PermissionManager.PermissionLevel.USER);
+        registerCommandWithPermission(dispatcher, "ClaimCommand", ClaimCommand::register, PermissionManager.PermissionLevel.OPERATOR);
+        registerCommandWithPermission(dispatcher, "ClaimPos1Command", ClaimPos1Command::register, PermissionManager.PermissionLevel.OPERATOR);
+        registerCommandWithPermission(dispatcher, "ClaimPos2Command", ClaimPos2Command::register, PermissionManager.PermissionLevel.OPERATOR);
+        registerCommandWithPermission(dispatcher, "AddPlayerCommand", AddPlayerCommand::register, PermissionManager.PermissionLevel.OWNER);
+        registerCommandWithPermission(dispatcher, "RemovePlayerCommand", RemovePlayerCommand::register, PermissionManager.PermissionLevel.OWNER);
+        registerCommandWithPermission(dispatcher, "ListClaimPlayersCommand", ListClaimPlayersCommand::register, PermissionManager.PermissionLevel.OWNER);
+        registerCommandWithPermission(dispatcher, "RemoveClaimCommand", RemoveClaimCommand::register, PermissionManager.PermissionLevel.OPERATOR);
+        registerCommandWithPermission(dispatcher, "ModifyClaimTitleCommand", ModifyClaimTitleCommand::register, PermissionManager.PermissionLevel.OWNER);
+        registerCommandWithPermission(dispatcher, "TransferClaimOwnershipCommand", TransferClaimOwnershipCommand::register, PermissionManager.PermissionLevel.OWNER);
+        registerCommandWithPermission(dispatcher, "ListClaimsCommand", ListClaimsCommand::register, PermissionManager.PermissionLevel.OPERATOR);
+    }
+
+    private void registerCommandWithPermission(CommandDispatcher<CommandSourceStack> dispatcher, String commandName,
+                                               java.util.function.Consumer<CommandDispatcher<CommandSourceStack>> registerFunction,
+                                               PermissionManager.PermissionLevel level) {
+        dispatcher.register(
+                Commands.literal(commandName)
+                        .requires(source -> {
+                            String claimName = ""; // You may need to determine this dynamically depending on the command
+                            return PermissionManager.hasPermission(source, level, claimName);
+                        })
+        );
+        registerFunction.accept(dispatcher);
     }
 
     public static class ClaimData {
@@ -79,7 +93,6 @@ public class TacFactionClaim {
         public Set<java.util.UUID> allowedPlayers = new HashSet<>();
         public java.util.UUID owner;
 
-        // Nouvelles variables pour le title
         public String title = "You entered";
 
         public ClaimData(java.util.UUID owner) {

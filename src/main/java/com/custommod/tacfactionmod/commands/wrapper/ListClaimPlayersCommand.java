@@ -2,6 +2,7 @@ package com.custommod.tacfactionmod.commands.wrapper;
 
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -9,10 +10,17 @@ import net.minecraft.server.level.ServerPlayer;
 import com.custommod.tacfactionmod.TacFactionClaim;
 
 public class ListClaimPlayersCommand {
+
+    // Suggestion provider for claims
+    private static final SuggestionProvider<CommandSourceStack> CLAIM_SUGGESTIONS = (context, builder) -> {
+        return net.minecraft.commands.SharedSuggestionProvider.suggest(TacFactionClaim.activeClaims.keySet(), builder);
+    };
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("tac")
                 .then(Commands.literal("listclaimplayers")
                         .then(Commands.argument("claimName", StringArgumentType.string())
+                                .suggests(CLAIM_SUGGESTIONS)
                                 .executes(context -> {
                                     String claimName = StringArgumentType.getString(context, "claimName");
                                     CommandSourceStack source = context.getSource();
