@@ -6,6 +6,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import com.custommod.tacfactionmod.TacFactionClaim;
 
 public class ModifyClaimTitleCommand {
@@ -23,14 +24,20 @@ public class ModifyClaimTitleCommand {
                                         .executes(context -> {
                                             String claimName = StringArgumentType.getString(context, "claimName");
                                             String title = StringArgumentType.getString(context, "title");
+                                            CommandSourceStack source = context.getSource();
+                                            ServerPlayer player = source.getPlayerOrException();
 
                                             TacFactionClaim.ClaimData claimData = TacFactionClaim.activeClaims.get(claimName);
 
                                             if (claimData != null) {
-                                                claimData.title = title;
-                                                context.getSource().sendSuccess(() -> Component.literal("Title for claim '" + claimName + "' has been updated to: " + title), false);
+                                                if (claimData.owner.equals(player.getUUID())) {
+                                                    claimData.title = title;
+                                                    source.sendSuccess(() -> Component.literal("Title for claim '" + claimName + "' has been updated to: " + title), false);
+                                                } else {
+                                                    source.sendFailure(Component.literal("You are not the owner of this claim!"));
+                                                }
                                             } else {
-                                                context.getSource().sendFailure(Component.literal("No claim found with the name '" + claimName + "'."));
+                                                source.sendFailure(Component.literal("No claim found with the name '" + claimName + "'."));
                                             }
 
                                             return 1;

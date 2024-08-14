@@ -21,14 +21,15 @@ public class PermissionManager {
                     TacFactionClaim.ClaimData claim = TacFactionClaim.activeClaims.get(claimName);
                     return claim != null && claim.owner.equals(player.getUUID());
                 case OPERATOR:
-                    return source.hasPermission(2);
+                    return player.getServer().getPlayerList().isOp(player.getGameProfile())
+                            || source.hasPermission(2);
                 case USER:
                     return true;
                 default:
                     return false;
             }
         } catch (CommandSyntaxException e) {
-            return false;  // Handle the exception appropriately
+            return false;
         }
     }
 }

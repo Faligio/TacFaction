@@ -45,7 +45,7 @@ public class TacFactionClaim {
     public TacFactionClaim() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
         modEventBus.addListener(this::commonSetup);
-        SOUND_EVENTS.register(modEventBus);  // Enregistrement du son
+        SOUND_EVENTS.register(modEventBus);
         MinecraftForge.EVENT_BUS.register(this);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
@@ -79,10 +79,7 @@ public class TacFactionClaim {
                                                PermissionManager.PermissionLevel level) {
         dispatcher.register(
                 Commands.literal(commandName)
-                        .requires(source -> {
-                            String claimName = ""; // You may need to determine this dynamically depending on the command
-                            return PermissionManager.hasPermission(source, level, claimName);
-                        })
+                        .requires(source -> PermissionManager.hasPermission(source, level, null))
         );
         registerFunction.accept(dispatcher);
     }

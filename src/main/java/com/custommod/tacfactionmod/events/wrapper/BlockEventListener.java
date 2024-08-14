@@ -1,19 +1,28 @@
 package com.custommod.tacfactionmod.events.wrapper;
 
 import com.custommod.tacfactionmod.TacFactionClaim;
+/*import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;*/
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.level.Level;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.event.level.BlockEvent;
+import net.minecraftforge.event.level.ExplosionEvent;
+import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = TacFactionClaim.MODID)
 public class BlockEventListener {
@@ -41,7 +50,6 @@ public class BlockEventListener {
                 BlockPos pos = event.getPos();
                 ItemStack itemInHand = player.getMainHandItem();
 
-                // Check if the item is water or lava bucket
                 if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET) {
                     handleBlockInteraction(player, pos, world, event);
                 }
@@ -54,25 +62,75 @@ public class BlockEventListener {
 
     @SubscribeEvent
     public static void onBlockInteract(PlayerInteractEvent.RightClickBlock event) {
-        try {
+        if (!event.getLevel().isClientSide) {
             if (event.getEntity() instanceof ServerPlayer player) {
                 Level world = player.getCommandSenderWorld();
                 BlockPos pos = event.getPos();
                 ItemStack itemInHand = player.getMainHandItem();
 
-                // Check if the player is trying to pick up or place water/lava
-                if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET || itemInHand.getItem() == Items.BUCKET) {
+                // Handle collecting water or lava with an empty bucket
+                if (itemInHand.getItem() == Items.BUCKET) {
+                    BlockState state = world.getBlockState(pos);
+                    if (state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.LAVA) {
+                        TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
+
+                        // If the block is in a claimed area and the player is not allowed, cancel the event
+                        if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                            player.sendSystemMessage(Component.literal("Vous n'avez pas la permission de récupérer ce liquide ici."));
+                            event.setCanceled(true);  // Cancel the event to prevent fluid collection
+                        }
+                    }
+                }
+
+                // Existing interaction checks for placing water/lava
+                if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET) {
                     handleBlockInteraction(player, pos, world, event);
                 }
 
-                // Additional check for other interactions, like opening chests, etc.
                 handleBlockInteraction(player, pos, world, event);
             }
-        } catch (Exception e) {
-            System.err.println("Error handling block interact event: " + e.getMessage());
-            e.printStackTrace();
         }
     }
+
+    @SubscribeEvent
+    public static void onItemFrameInteract(PlayerInteractEvent.EntityInteractSpecific event) {
+        if (!event.getLevel().isClientSide) {
+            if (event.getEntity() instanceof ServerPlayer player) {
+                if (event.getTarget() instanceof ItemFrame) {
+                    BlockPos pos = event.getTarget().blockPosition();
+                    TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
+
+                    if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                        player.sendSystemMessage(Component.literal("Vous n'avez pas la permission d'interagir avec cet item frame ici."));
+                        event.setCanceled(true);
+                    }
+                }
+            }
+        }
+    }
+
+   /* public static void onStorageDrawerInteract(PlayerInteractEvent.RightClickBlock event) {
+        if (!event.getLevel().isClientSide) {
+            if (event.getEntity() instanceof ServerPlayer player) {
+                Level world = player.getCommandSenderWorld();
+                BlockPos pos = event.getPos();
+                BlockState state = world.getBlockState(pos);
+
+                // Check if the block is a Storage Drawer
+                if (state.getBlock() instanceof BlockDrawers) {
+                    TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
+
+                    // If the Storage Drawer is in a claimed area and the player is not allowed, cancel the event
+                    if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                        player.sendSystemMessage(Component.literal("Vous n'avez pas la permission d'interagir avec ce Storage Drawer ici."));
+                        event.setCanceled(true);  // Cancel the event to prevent interaction with the Storage Drawer
+                    }
+                }
+            }
+        }
+    }*/
+
+
 
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
@@ -84,7 +142,7 @@ public class BlockEventListener {
                 if (event.getEntity() instanceof Animal) {
                     TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
 
-                    if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                    if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID()) && !player.hasPermissions(4)) {
                         player.sendSystemMessage(Component.literal("Vous n'avez pas la permission de tuer des animaux ici."));
                         event.setCanceled(true); // Properly cancel the event
                     }
@@ -96,9 +154,37 @@ public class BlockEventListener {
         }
     }
 
+    @SubscribeEvent
+    public static void onExplosionDetonate(ExplosionEvent.Detonate event) {
+        List<BlockPos> affectedBlocks = event.getAffectedBlocks();
+        affectedBlocks.removeIf(blockPos -> {
+            TacFactionClaim.ClaimData claim = getClaimAtPosition(blockPos);
+            return claim != null;
+        });
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public static void onAttackEntity(AttackEntityEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            BlockPos pos = event.getTarget().blockPosition();
+            TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
+
+            if (claim != null && event.getTarget() instanceof Animal) {
+                if (!claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                    player.sendSystemMessage(Component.literal("Vous n'avez pas la permission de frapper des animaux ici."));
+                    event.setCanceled(true);
+                }
+            }
+        }
+    }
+
     private static void handleBlockInteraction(ServerPlayer player, BlockPos pos, Level world, net.minecraftforge.eventbus.api.Event event) {
         try {
             TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
+
+            if (player.hasPermissions(4)) {
+                return;
+            }
 
             if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
                 player.sendSystemMessage(Component.literal("Vous n'avez pas la permission d'interagir avec les blocs ici."));
@@ -123,5 +209,24 @@ public class BlockEventListener {
             }
         }
         return null;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerUseItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            ItemStack itemInHand = event.getItemStack();
+
+            // Vérifie si l'objet est un seau d'eau ou de lave
+            if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET) {
+                BlockPos pos = player.blockPosition();  // Obtient la position actuelle du joueur
+                TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);  // Vérifie s'il s'agit d'une zone revendiquée
+
+                // Si la zone est revendiquée et que le joueur n'est pas autorisé
+                if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
+                    player.sendSystemMessage(Component.literal("Vous n'avez pas la permission d'utiliser ce seau ici."));
+                    event.setCanceled(true);  // Annule l'événement pour empêcher l'action
+                }
+            }
+        }
     }
 }
