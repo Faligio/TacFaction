@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/TacFaction.main.iml" filepath="$PROJECT_DIR$/.idea/modules/TacFaction.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/TacFaction.test.iml" filepath="$PROJECT_DIR$/.idea/modules/TacFaction.test.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.custommod.TacFaction.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.custommod.TacFaction.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.custommod.TacFaction.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.custommod.TacFaction.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/forgee-1.20.1-47.3.5-mdk.main.iml" filepath="$PROJECT_DIR$/.idea/modules/forgee-1.20.1-47.3.5-mdk.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/forgee-1.20.1-47.3.5-mdk.test.iml" filepath="$PROJECT_DIR$/.idea/modules/forgee-1.20.1-47.3.5-mdk.test.iml" />
     </modules>

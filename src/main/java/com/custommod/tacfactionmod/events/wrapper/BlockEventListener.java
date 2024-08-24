@@ -2,6 +2,7 @@ package com.custommod.tacfactionmod.events.wrapper;
 
 import com.custommod.tacfactionmod.TacFactionClaim;
 /*import com.jaquadro.minecraft.storagedrawers.block.BlockDrawers;*/
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.level.Level;
@@ -21,6 +22,7 @@ import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.util.List;
 
@@ -68,21 +70,24 @@ public class BlockEventListener {
                 BlockPos pos = event.getPos();
                 ItemStack itemInHand = player.getMainHandItem();
 
-                // Handle collecting water or lava with an empty bucket
+                BlockState state = world.getBlockState(pos);
+                ResourceLocation blockId = ForgeRegistries.BLOCKS.getKey(state.getBlock());
+
+                if (blockId != null && blockId.getNamespace().equals("waystones")) {
+                    return;
+                }
+
                 if (itemInHand.getItem() == Items.BUCKET) {
-                    BlockState state = world.getBlockState(pos);
                     if (state.getBlock() == Blocks.WATER || state.getBlock() == Blocks.LAVA) {
                         TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
 
-                        // If the block is in a claimed area and the player is not allowed, cancel the event
                         if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
                             player.sendSystemMessage(Component.literal("Vous n'avez pas la permission de récupérer ce liquide ici."));
-                            event.setCanceled(true);  // Cancel the event to prevent fluid collection
+                            event.setCanceled(true);
                         }
                     }
                 }
 
-                // Existing interaction checks for placing water/lava
                 if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET) {
                     handleBlockInteraction(player, pos, world, event);
                 }
@@ -216,15 +221,13 @@ public class BlockEventListener {
         if (event.getEntity() instanceof ServerPlayer player) {
             ItemStack itemInHand = event.getItemStack();
 
-            // Vérifie si l'objet est un seau d'eau ou de lave
             if (itemInHand.getItem() == Items.WATER_BUCKET || itemInHand.getItem() == Items.LAVA_BUCKET) {
-                BlockPos pos = player.blockPosition();  // Obtient la position actuelle du joueur
-                TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);  // Vérifie s'il s'agit d'une zone revendiquée
+                BlockPos pos = player.blockPosition();
+                TacFactionClaim.ClaimData claim = getClaimAtPosition(pos);
 
-                // Si la zone est revendiquée et que le joueur n'est pas autorisé
                 if (claim != null && !claim.allowedPlayers.contains(player.getUUID()) && !claim.owner.equals(player.getUUID())) {
                     player.sendSystemMessage(Component.literal("Vous n'avez pas la permission d'utiliser ce seau ici."));
-                    event.setCanceled(true);  // Annule l'événement pour empêcher l'action
+                    event.setCanceled(true);
                 }
             }
         }
